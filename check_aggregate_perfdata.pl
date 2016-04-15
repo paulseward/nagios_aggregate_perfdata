@@ -7,16 +7,16 @@
 # This check should be run on a nagios server (not via nrpe) as it pulls information directly from status.dat
 #
 #
-# %options = (
-#    "H|host-regex=s"            => [ \$host_regex2,  "Host regex to match (optional)" ],
-#    "s|service-description=s"   => [ \$service_desc, "Nagios service description to cluster together" ],
-#    "p|perf-label=s"            => [ \$perf_label,   "Perfdata label to aggregate in perfdata" ],
-#    "f|status-file=s"           => [ \$status_dat,   "Nagios status.dat file to check for the aggregate perfdata (defaults to $default_status_dat)" ],
-#    "u|units=s"                 => [ \$units,        "Units of perfdata" ],
-#    "w|warning=s"               => [ \$warning,      "Warning threshold or ran:ge (inclusive)"   ],
-#    "c|critical=s"              => [ \$critical,     "Critical threshold or ran:ge (inclusive)" ],
-#    "a|average"                 => [ \$critical,     "Average the results rather than summing them" ],
-# );
+# Usage:
+# check_aggregate_perfdata.pl
+#   -H|host-regex           Host regex to match (optional, if it's missing it will aggregate accross all hosts)
+#   -s|service-description  Nagios service description to match
+#   -p|perf-label           Perfdata label to aggregate 
+#   -f|status-file          Path to Nagios status.dat file 
+#   -u|units                Units of result
+#   -w|warning              Warning threshold 
+#   -c|critical             Critical threshold 
+#   -a|average              Average the results rather than summing them
 
 use strict;
 use Data::Dumper;
