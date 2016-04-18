@@ -9,10 +9,10 @@
 #
 # Usage:
 # check_aggregate_perfdata.pl
-#   -H|host-regex           Host regex to match (optional, if it's missing it will aggregate accross all hosts)
-#   -s|service-description  Nagios service description to match
-#   -p|perf-label           Perfdata label to aggregate 
-#   -f|status-file          Path to Nagios status.dat file 
+#   -H|host-regex           Host regex to match (optional, if missing it will aggregate accross all hosts)
+#   -s|service-description  Nagios service description to match (optional, if missing will aggregate all services)
+#   -p|perf-label           Perfdata label to aggregate (required)
+#   -f|status-file          Path to Nagios status.dat file (defaults to /var/log/nagios/status.dat)
 #   -u|units                Units of result
 #   -w|warning              Warning threshold 
 #   -c|critical             Critical threshold 
@@ -20,17 +20,35 @@
 
 use strict;
 use Data::Dumper;
+use Getopt::Long;
 
 # Nagios error codes
 my %ERRORS=('OK'=>0,'WARNING'=>1,'CRITICAL'=>2,'UNKNOWN'=>3,'DEPENDENT'=>4);
 
 # Defaults
-# my $status_dat = "/var/log/nagios/status.dat";
-my $status_dat = "./status.dat";
-my $hostmatch  = "137.222.10.3[69]";
-my $perf_label = "time";
+my $status_dat = "/var/log/nagios/status.dat";
+my $hostmatch  = "";
+my $perf_label = "";
+my $service_description = "";
+my $units = "";
+my $warning = 0;
+my $critical = 0;
+my $average;
 
-# Parse Options - TODO
+# Parse Options
+unless (GetOptions (
+  "H|host-regex=s" => \$hostmatch,
+  "s|service-description=s" => \$service_description,
+  "p|perf-label=s"          => \$perf_label,
+  "f|status-file=s"         => \$status_dat,
+  "u|units=s"               => \$units,
+  "w|warning=f"             => \$warning,
+  "c|critical=f"            => \$critical,
+  "a|average"               => \$average
+  )) {
+  print "Unable to parse command line arguments\n";
+  exit $ERRORS{'UNKNOWN'};
+}
 
 # Parse $status_dat looking for all the servicestatus{} blocks and build an array of hashrefs describing each servicestatus
 my $fh = undef;
@@ -52,9 +70,11 @@ while(<$fh>){
   if ($in_svc_blk) {
     # If this is the end of the servicestatus block, process the hashref and reset for the next block
     if (/^\s*}\s*$/) {
-      # If this servicestatus was for a host we're interested in, add it to the array
+      # If this servicestatus was for a host/service we're interested in, add it to the array
       if ($$this_status{'host_name'} =~ qr/$hostmatch/) {
-        push @servicestatus, $this_status;
+        if ($$this_status{'service_description'} =~ qr/$service_description/) {
+          push @servicestatus, $this_status;
+        }
       }
       $this_status=undef;
       $in_svc_blk = 0;
@@ -69,17 +89,32 @@ while(<$fh>){
 }
 close($fh);
 
-# If we found performance data, process it - TODO
+# If we found performance data, process it
 if (scalar @servicestatus >= 1) {
   my $aggregate;
-  foreach my $status(@servicestatus) { # TODO
+  foreach my $status(@servicestatus) {
     if($$status{'performance_data'} =~ qr/^['"]?$perf_label['"]?=(\d+(?:\.\d+)?).*$/) {
       $aggregate += $1;
     }
   }
-  # Output the summarized perfdata - TODO
-  print "Sum = $aggregate\n";
-  print "Average = " . ($aggregate / scalar(@servicestatus)) . "\n";
+  # Are we working on sum or average?
+  my $rv = defined($average) ? $aggregate / scalar(@servicestatus) : $aggregate;
+  # produce output
+  if ($critical) {
+    if ($rv >= $critical) {
+      print "CRITICAL: $rv";
+      exit $ERRORS{'CRITICAL'};
+    }
+  }
+  if ($warning) {
+    if ($rv >= $warning) {
+       print "WARNING: $rv";
+       exit $ERRORS{'WARNING'};
+    }
+  }
+
+  print "OK: $rv";
+  exit $ERRORS{'OK'};
 }
 else {
   # Nothing in the array, bail out with a warning
