@@ -94,19 +94,21 @@ if (scalar @servicestatus >= 1) {
   }
   # Are we working on sum or average?
   my $rv = defined($average) ? $aggregate / scalar(@servicestatus) : $aggregate;
+  my $av_txt = defined($average) ? "average" : "total";
+  
   # produce output
   if ($critical) {
     if ($rv >= $critical) {
-      &quit('CRITICAL',"|$perf_label=$rv");
+      &quit('CRITICAL',"$service_description $av_txt CRITICAL|$perf_label=$rv");
     }
   }
   if ($warning) {
     if ($rv >= $warning) {
-      &quit('WARNING',"|$perf_label=$rv");
+      &quit('WARNING',"$service_description $av_txt WARNING|$perf_label=$rv");
     }
   }
   # If we're not critical or warning, we're OK
-  &quit('OK',"|$perf_label=$rv");
+  &quit('OK',"$service_description $av_txt OK|$perf_label=$rv");
 }
 else {
   # Nothing in the array, bail out with a warning
