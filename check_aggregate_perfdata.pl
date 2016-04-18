@@ -22,9 +22,6 @@ use strict;
 use Data::Dumper;
 use Getopt::Long;
 
-# Nagios error codes
-my %ERRORS=('OK'=>0,'WARNING'=>1,'CRITICAL'=>2,'UNKNOWN'=>3,'DEPENDENT'=>4);
-
 # Defaults
 my $status_dat = "/var/log/nagios/status.dat";
 my $hostmatch  = "";
@@ -46,15 +43,13 @@ unless (GetOptions (
   "c|critical=f"            => \$critical,
   "a|average"               => \$average
   )) {
-  print "Unable to parse command line arguments\n";
-  exit $ERRORS{'UNKNOWN'};
+  &quit('UNKNOWN',"Unable to parse command line arguments");
 }
 
 # Parse $status_dat looking for all the servicestatus{} blocks and build an array of hashrefs describing each servicestatus
 my $fh = undef;
 unless (open($fh, "<", $status_dat)) {
-  print "Unable to open $status_dat for reading\n";
-  exit $ERRORS{'UNKNOWN'};
+  &quit('UNKNOWN',"Unable to open $status_dat for reading");
 }
 
 my @servicestatus;
@@ -102,26 +97,53 @@ if (scalar @servicestatus >= 1) {
   # produce output
   if ($critical) {
     if ($rv >= $critical) {
-      print "CRITICAL: $rv";
-      exit $ERRORS{'CRITICAL'};
+      &quit('CRITICAL',"|$perf_label=$rv");
     }
   }
   if ($warning) {
     if ($rv >= $warning) {
-       print "WARNING: $rv";
-       exit $ERRORS{'WARNING'};
+      &quit('WARNING',"|$perf_label=$rv");
     }
   }
-
-  print "OK: $rv";
-  exit $ERRORS{'OK'};
+  # If we're not critical or warning, we're OK
+  &quit('OK',"|$perf_label=$rv");
 }
 else {
   # Nothing in the array, bail out with a warning
-  print "Unable to find any servicestatus detail for that host\n";
-  exit $ERRORS{'UNKNOWN'};
+  &quit('UNKNOWN',"Unable to find matching perfdata for that host/service/label");
 }
 
 exit;
 
-__END__
+sub quit {
+  my $level = shift;
+  my $text  = shift;
+  
+  # Nagios error codes
+  my %ERRORS=('OK'=>0,'WARNING'=>1,'CRITICAL'=>2,'UNKNOWN'=>3,'DEPENDENT'=>4);
+
+  if ($level eq "OK") {
+    print "OK:$text";
+    exit $ERRORS{'OK'};
+  }
+  elsif ($level eq "WARNING") {
+    print "WARNING:$text";
+    exit $ERRORS{'WARNING'};
+  }
+  elsif ($level eq "CRITICAL") {
+    print "CRITICAL:$text";
+    exit $ERRORS{'CRITICAL'};
+  }
+  elsif ($level eq "UNKNOWN") {
+    print "UNKNOWN:$text";
+    exit $ERRORS{'UNKNOWN'};
+  }
+  elsif ($level eq "DEPENDENT") {
+    print "OK:$text";
+    exit $ERRORS{'OK'};
+  }
+  else {
+    print "UNKNOWN:Unexpected error level in quit. $level $text";
+    exit $ERRORS{'UNKNOWN'};
+  }
+}
