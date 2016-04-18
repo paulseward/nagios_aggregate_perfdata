@@ -1,4 +1,4 @@
-# nagios_aggregate_perfdata
+# check_aggregate_perfdata
 
 Nagios plugin to aggregate perfdata from multiple checks so we can draw a unified graph of activity across several servers.
 
@@ -6,7 +6,7 @@ This check should be run on a nagios server (not via nrpe) as it pulls informati
 
 ```
 Usage:
-check_aggregate_perfdata.pl
+check_aggregate_perfdata
   -H|host-regex           Host regex to match (optional, if missing it will aggregate accross all hosts)
   -s|service-description  Nagios service description to match (required)
   -p|perf-label           Perfdata label to aggregate (required)
