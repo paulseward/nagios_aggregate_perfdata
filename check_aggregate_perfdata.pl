@@ -10,12 +10,12 @@
 # Usage:
 # check_aggregate_perfdata.pl
 #   -H|host-regex           Host regex to match (optional, if missing it will aggregate accross all hosts)
-#   -s|service-description  Nagios service description to match (optional, if missing will aggregate all services)
+#   -s|service-description  Nagios service description to match (required)
 #   -p|perf-label           Perfdata label to aggregate (required)
 #   -f|status-file          Path to Nagios status.dat file (defaults to /var/log/nagios/status.dat)
-#   -u|units                Units of result
-#   -w|warning              Warning threshold 
-#   -c|critical             Critical threshold 
+#   -u|units                Units of result (defaults to no units)
+#   -w|warning              Warning threshold (optional)
+#   -c|critical             Critical threshold (optional)
 #   -a|average              Average the results rather than summing them
 
 use strict;
@@ -44,6 +44,14 @@ unless (GetOptions (
   "a|average"               => \$average
   )) {
   &quit('UNKNOWN',"Unable to parse command line arguments");
+}
+
+# Abort if we're missing reuired parameters
+unless ($service_description) {
+  &quit('UNKNOWN',"service-description must be specified");
+}
+unless ($perf_label) {
+  &quit('UNKNOWN',"perf-label must be specified");
 }
 
 # Parse $status_dat looking for all the servicestatus{} blocks and build an array of hashrefs describing each servicestatus

@@ -6,13 +6,13 @@ This check should be run on a nagios server (not via nrpe) as it pulls informati
 
 ```
 Usage:
-  check_aggregate_perfdata.pl 
-    -H|host-regex           Host regex to match (optional, if it's missing it will aggregate accross all hosts)
-    -s|service-description  Nagios service description to match
-    -p|perf-label           Perfdata label to aggregate
-    -f|status-file          Path to Nagios status.dat file
-    -u|units                Units of result
-    -w|warning              Warning threshold
-    -c|critical             Critical threshold
-    -a|average              Average the results rather than summing them
+check_aggregate_perfdata.pl
+  -H|host-regex           Host regex to match (optional, if missing it will aggregate accross all hosts)
+  -s|service-description  Nagios service description to match (required)
+  -p|perf-label           Perfdata label to aggregate (required)
+  -f|status-file          Path to Nagios status.dat file (defaults to /var/log/nagios/status.dat)
+  -u|units                Units of result (defaults to no units)
+  -w|warning              Warning threshold (optional)
+  -c|critical             Critical threshold (optional)
+  -a|average              Average the results rather than summing them
 ```
