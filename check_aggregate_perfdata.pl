@@ -99,16 +99,16 @@ if (scalar @servicestatus >= 1) {
   # produce output
   if ($critical) {
     if ($rv >= $critical) {
-      &quit('CRITICAL',"$service_description $av_txt CRITICAL|$perf_label=$rv");
+      &quit('CRITICAL',"$service_description $av_txt CRITICAL|$perf_label=$rv$units;$warning;$critical;;");
     }
   }
   if ($warning) {
     if ($rv >= $warning) {
-      &quit('WARNING',"$service_description $av_txt WARNING|$perf_label=$rv");
+      &quit('WARNING',"$service_description $av_txt WARNING|$perf_label=$rv$units;$warning;$critical;;");
     }
   }
   # If we're not critical or warning, we're OK
-  &quit('OK',"$service_description $av_txt OK|$perf_label=$rv");
+  &quit('OK',"$service_description $av_txt OK|$perf_label=$rv$units;$warning;$critical;;");
 }
 else {
   # Nothing in the array, bail out with a warning
