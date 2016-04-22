@@ -96,7 +96,7 @@ close($fh);
 if (scalar @servicestatus >= 1) {
   my $aggregate;
   foreach my $status(@servicestatus) {
-    if($$status{'performance_data'} =~ qr/^['"]?$perf_label['"]?=(\d+(?:\.\d+)?).*$/) {
+    if($$status{'performance_data'} =~ qr/['"]?$perf_label['"]?=(\d+(?:\.\d+)?).*/) {
       $aggregate += $1;
     }
   }
